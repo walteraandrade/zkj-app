@@ -1,0 +1,7 @@
+{
+  "name": "ZKJ - Controle de qualidade",
+  "description": "Um aplicativo para gerenciar o registro e acasalamento de cavalos em sua criação. Os dados são salvos localmente no seu dispositivo.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
