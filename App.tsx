@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Horse, Gender, MatingRecord } from './types';
-import useLocalStorage from './hooks/useLocalStorage';
+import useIndexedDB from './hooks/useLocalStorage';
 import Header from './components/Header';
 import HorseList from './components/HorseList';
 import HorseDetail from './components/HorseDetail';
@@ -10,7 +10,7 @@ import MatingForm from './components/MatingForm';
 type View = 'LIST' | 'DETAIL' | 'ADD' | 'EDIT' | 'MATE';
 
 const App: React.FC = () => {
-  const [horses, setHorses] = useLocalStorage<Horse[]>('horses', []);
+  const { horses, addHorse, updateHorse, deleteHorse, importData } = useIndexedDB();
   const [view, setView] = useState<View>('LIST');
   const [selectedHorseId, setSelectedHorseId] = useState<string | null>(null);
 
@@ -24,18 +24,21 @@ const App: React.FC = () => {
       id: crypto.randomUUID(),
       matingHistory: [],
     };
-    setHorses(prev => [...prev, newHorse]);
+    addHorse(newHorse);
     setView('LIST');
   };
   
   const handleUpdateHorse = (horseData: Omit<Horse, 'matingHistory'>) => {
-    setHorses(prev => prev.map(h => h.id === horseData.id ? { ...h, ...horseData } : h));
+    const horseToUpdate = horses.find(h => h.id === horseData.id);
+    if(horseToUpdate) {
+        updateHorse({ ...horseToUpdate, ...horseData });
+    }
     setView('DETAIL');
   };
 
   const handleDeleteHorse = (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este cavalo? Esta ação não pode ser desfeita.')) {
-      setHorses(prev => prev.filter(h => h.id !== id));
+      deleteHorse(id);
       setView('LIST');
       setSelectedHorseId(null);
     }
@@ -51,7 +54,8 @@ const App: React.FC = () => {
         ...selectedHorse,
         matingHistory: [...selectedHorse.matingHistory, newMatingRecord],
     };
-    handleUpdateHorse(updatedHorse);
+    updateHorse(updatedHorse);
+    setView('DETAIL');
   }
 
   const handleExport = () => {
@@ -76,14 +80,14 @@ const App: React.FC = () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
         try {
             const text = e.target?.result;
             if (typeof text === 'string') {
                 const importedHorses = JSON.parse(text);
                 // Basic validation
                 if (Array.isArray(importedHorses) && (importedHorses.length === 0 || importedHorses[0].id)) {
-                    setHorses(importedHorses);
+                    await importData(importedHorses);
                     alert("Dados importados com sucesso!");
                     setView('LIST');
                 } else {
