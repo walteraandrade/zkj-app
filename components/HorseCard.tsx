@@ -8,7 +8,9 @@ interface HorseCardProps {
 }
 
 const calculateAge = (birthDate: string): string => {
-    const birth = new Date(birthDate);
+    if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return 'Idade desconhecida';
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const birth = new Date(year, month - 1, day);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();

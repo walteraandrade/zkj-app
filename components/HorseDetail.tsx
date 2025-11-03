@@ -10,13 +10,21 @@ interface HorseDetailProps {
 }
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {timeZone: 'UTC'}).format(date);
+    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return 'N/A';
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        timeZone: 'UTC',
+    }).format(date);
 };
 
 const calculateAge = (birthDate: string): string => {
-    const birth = new Date(birthDate);
+    if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return 'Idade desconhecida';
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const birth = new Date(year, month - 1, day);
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
